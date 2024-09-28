@@ -9,6 +9,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import xyz.refinedev.api.skin.listener.SkinListener;
 import xyz.refinedev.api.skin.player.IPlayerAdapter;
 import xyz.refinedev.api.skin.player.impl.CarbonAdapter;
 import xyz.refinedev.api.skin.player.impl.LegacyAdapter;
@@ -74,6 +75,8 @@ public class SkinAPI {
         } else {
             this.playerAdapter = new LegacyAdapter(this);
         }
+
+        Bukkit.getPluginManager().registerEvents(new SkinListener(this), plugin);
     }
 
     public void unload() {
