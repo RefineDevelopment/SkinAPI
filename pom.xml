@@ -35,9 +35,9 @@
         </dependency>
 
         <dependency>
-            <groupId>org.github.paperspigot</groupId>
+            <groupId>org.paperspigot</groupId>
             <artifactId>PaperSpigot</artifactId>
-            <version>1.8.8-R0.1-SNAPSHOT</version>
+            <version>1.8.8</version>
             <scope>provided</scope>
         </dependency>
 
