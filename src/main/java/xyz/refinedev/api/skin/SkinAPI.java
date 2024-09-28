@@ -1,12 +1,18 @@
-package xyz.refinedev.api;
+package xyz.refinedev.api.skin;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
+import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import xyz.refinedev.api.skin.player.IPlayerAdapter;
+import xyz.refinedev.api.skin.player.impl.CarbonAdapter;
+import xyz.refinedev.api.skin.player.impl.LegacyAdapter;
+import xyz.refinedev.api.skin.player.impl.ModernAdapter;
 import xyz.refinedev.api.storage.JsonStorage;
 
 import java.io.BufferedReader;
@@ -52,9 +58,22 @@ public class SkinAPI {
      */
     private final Map<String, CachedSkin> skinCache = new ConcurrentHashMap<>();
 
+    /**
+     * Player adapter for fetching skins
+     */
+    private final IPlayerAdapter playerAdapter;
+
     public SkinAPI(JavaPlugin plugin, Gson gson) {
         this.skinStorage = new JsonStorage<>("skins", plugin, gson);
         this.initiateCacheFromStorage();
+
+        if (MINOR_VERSION >= 13) {
+            this.playerAdapter = new ModernAdapter(this);
+        } else if (SUPPORTS_CARBON) {
+            this.playerAdapter = new CarbonAdapter(this);
+        } else {
+            this.playerAdapter = new LegacyAdapter(this);
+        }
     }
 
     public void unload() {
@@ -72,6 +91,25 @@ public class SkinAPI {
         for ( CachedSkin skin : skinList ) {
             this.skinCache.put(skin.getName(), skin);
         }
+    }
+
+    /**
+     * Get the cached skin by the player.
+     *
+     * @param player {@link Player} Player to get the skin from.
+     * @return {@link CachedSkin} CachedSkin
+     */
+    public CachedSkin getByPlayer(Player player) {
+        return this.playerAdapter.getByPlayer(player);
+    }
+
+    /**
+     * Register the skin for the player.
+     *
+     * @param player {@link Player} Player to register the skin for.
+     */
+    public void registerSkin(Player player) {
+        this.playerAdapter.registerSkin(player);
     }
 
     public void fetchSkin(String name, Consumer<CachedSkin> callback) {
@@ -156,5 +194,32 @@ public class SkinAPI {
      */
     public CachedSkin getSkin(String name) {
         return this.skinCache.getOrDefault(name, null);
+    }
+
+    public static String VERSION;
+    public static int MINOR_VERSION;
+    public static boolean SUPPORTS_CARBON;
+
+    static {
+        try {
+            String versionName = Bukkit.getServer().getClass().getPackage().getName();
+            VERSION = versionName.length() < 4 ? versionName.split("\\.")[2] : versionName.split("\\.")[3];
+            MINOR_VERSION = Integer.parseInt(VERSION.split("_")[1]);
+        } catch (Exception e) {
+            VERSION = "v" + Bukkit.getServer().getBukkitVersion().replace("-SNAPSHOT", "").replace("-R0.", "_R").replace(".", "_");
+            MINOR_VERSION = Integer.parseInt(VERSION.split("_")[1]);
+        }
+
+        try {
+            Class.forName("xyz.refinedev.spigot.features.combat.CombatAPI");
+            SUPPORTS_CARBON = true;
+        } catch (ClassNotFoundException e) {
+            try {
+                Class.forName("xyz.refinedev.spigot.api.knockback.KnockbackAPI");
+                SUPPORTS_CARBON = true;
+            } catch (ClassNotFoundException ex) {
+                SUPPORTS_CARBON = false;
+            }
+        }
     }
 }
