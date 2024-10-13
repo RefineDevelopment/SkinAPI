@@ -3,8 +3,11 @@ package xyz.refinedev.api.skin.listener;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
+import xyz.refinedev.api.skin.CachedSkin;
 import xyz.refinedev.api.skin.SkinAPI;
 
 /**
@@ -24,11 +27,21 @@ public class SkinListener implements Listener {
 
     private final SkinAPI api;
 
-    @EventHandler
-    public void onLoginEvent(PlayerJoinEvent event) {
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
 
-        api.registerSkin(player);
+        CachedSkin cachedSkin = api.getSkin(player.getName());
+        if (cachedSkin == null) {
+            api.registerPlayer(player);
+        }
+    }
+
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        Player player = event.getPlayer();
+
+        api.clearPlayer(player);
     }
 }
 

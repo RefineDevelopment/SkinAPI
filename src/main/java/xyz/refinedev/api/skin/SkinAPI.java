@@ -5,6 +5,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
+import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -57,7 +58,12 @@ public class SkinAPI {
     /**
      * This list stores our cached skins, so we don't fetch them all the time.
      */
-    private final Map<String, CachedSkin> skinCache = new ConcurrentHashMap<>();
+    @Getter private final Map<String, CachedSkin> skinCache = new ConcurrentHashMap<>();
+
+    /**
+     * Temporary cache for skins that are fetched on login and then removed.
+     */
+    @Getter private final Map<String, CachedSkin> temporaryCache = new ConcurrentHashMap<>();
 
     /**
      * Player adapter for fetching skins
@@ -116,6 +122,14 @@ public class SkinAPI {
     }
 
     public void fetchSkin(String name, Consumer<CachedSkin> callback) {
+        // Register skin only when it's demanded
+        if (this.temporaryCache.containsKey(name)) {
+            CachedSkin skin = this.temporaryCache.get(name);
+            this.registerSkin(name, skin);
+            callback.accept(skin);
+            return;
+        }
+
         // Avoid race conditions and fetching the same skin multiple times
         if (this.skinFutures.containsKey(name)) {
             CompletableFuture<CachedSkin> skinFuture = this.skinFutures.get(name);
@@ -190,13 +204,34 @@ public class SkinAPI {
     }
 
     /**
+     * Register a player to the cache.
+     *
+     * @param player {@link Player} Player to register
+     */
+    public void registerPlayer(Player player) {
+        if (this.skinCache.containsKey(player.getName())) return;
+
+        CachedSkin skin = this.getByPlayer(player);
+        this.temporaryCache.put(player.getName(), skin);
+    }
+
+    /**
+     * Clear a player from the cache.
+     *
+     * @param player {@link Player} Player to clear
+     */
+    public void clearPlayer(Player player) {
+        this.temporaryCache.remove(player.getName());
+    }
+
+    /**
      * Get a cached skin associated with this specific name.
      *
      * @param name {@link String} Name
      * @return     {@link CachedSkin} Skin
      */
     public CachedSkin getSkin(String name) {
-        return this.skinCache.getOrDefault(name, null);
+        return this.temporaryCache.getOrDefault(name, this.skinCache.getOrDefault(name, null));
     }
 
     public static String VERSION;
