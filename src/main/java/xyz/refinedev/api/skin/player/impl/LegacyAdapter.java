@@ -11,6 +11,8 @@ import xyz.refinedev.api.skin.CachedSkin;
 import xyz.refinedev.api.skin.SkinAPI;
 import xyz.refinedev.api.skin.player.IPlayerAdapter;
 
+import java.util.Iterator;
+
 /**
  * <p>
  * This Project is property of Refine Development.<br>
@@ -36,8 +38,11 @@ public class LegacyAdapter implements IPlayerAdapter {
      */
     public CachedSkin getByPlayer(Player player) {
         WrappedGameProfile profile = WrappedGameProfile.fromPlayer(player);
-        WrappedSignedProperty prop = profile.getProperties().get("textures").iterator().next();
-
+        Iterator<WrappedSignedProperty> iterator = profile.getProperties().get("textures").iterator();
+        if (!iterator.hasNext()) {
+            return SkinAPI.DEFAULT;
+        }
+        WrappedSignedProperty prop = iterator.next();
         return new CachedSkin(player.getName(), prop.getValue(), prop.getSignature());
     }
 

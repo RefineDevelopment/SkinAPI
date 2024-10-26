@@ -37,3 +37,11 @@ build/
 ### Mac OS ###
 .DS_Store
 /.mvn/
+/.idea/.gitignore
+/.idea/discord.xml
+/.idea/encodings.xml
+/.idea/git_toolbox_blame.xml
+/.idea/material_theme_project_new.xml
+/.idea/misc.xml
+/.idea/uiDesigner.xml
+/.idea/vcs.xml
