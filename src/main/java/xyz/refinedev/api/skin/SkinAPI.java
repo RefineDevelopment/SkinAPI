@@ -5,7 +5,9 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
+
 import lombok.Getter;
+
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -15,7 +17,7 @@ import xyz.refinedev.api.skin.player.IPlayerAdapter;
 import xyz.refinedev.api.skin.player.impl.CarbonAdapter;
 import xyz.refinedev.api.skin.player.impl.LegacyAdapter;
 import xyz.refinedev.api.skin.player.impl.ModernAdapter;
-import xyz.refinedev.api.storage.JsonStorage;
+import xyz.refinedev.api.storage.json.JsonStorage;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -23,8 +25,7 @@ import java.io.InputStreamReader;
 import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.Collection;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
@@ -211,8 +212,13 @@ public class SkinAPI {
     public void registerPlayer(Player player) {
         if (this.skinCache.containsKey(player.getName())) return;
 
-        CachedSkin skin = this.getByPlayer(player);
-        this.temporaryCache.put(player.getName(), skin);
+        CompletableFuture<CachedSkin> future = CompletableFuture.supplyAsync(() -> fetchSkin(player.getName()));
+        this.skinFutures.put(player.getName(), future);
+
+        future.whenComplete((skin, throwable) -> {
+            this.registerSkin(player.getName(), skin);
+            this.skinFutures.remove(player.getName());
+        });
     }
 
     /**
