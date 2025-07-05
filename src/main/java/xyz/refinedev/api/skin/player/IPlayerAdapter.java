@@ -1,7 +1,7 @@
 package xyz.refinedev.api.skin.player;
 
 import org.bukkit.entity.Player;
-import xyz.refinedev.api.skin.CachedSkin;
+import xyz.refinedev.api.skin.data.CachedSkin;
 
 /**
  * <p>
@@ -23,12 +23,5 @@ public interface IPlayerAdapter {
      * @return {@link CachedSkin} CachedSkin
      */
     CachedSkin getByPlayer(Player player);
-
-    /**
-     * Register the skin for the player.
-     *
-     * @param player {@link Player} Player to register the skin for.
-     */
-    void registerSkin(Player player);
 
 }

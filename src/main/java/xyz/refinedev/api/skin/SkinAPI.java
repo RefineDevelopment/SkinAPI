@@ -12,7 +12,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import xyz.refinedev.api.skin.listener.SkinListener;
+import xyz.refinedev.api.skin.data.CachedSkin;
 import xyz.refinedev.api.skin.player.IPlayerAdapter;
 import xyz.refinedev.api.skin.player.impl.CarbonAdapter;
 import xyz.refinedev.api.skin.player.impl.LegacyAdapter;
@@ -46,8 +46,6 @@ public class SkinAPI {
     private static final Type TYPE = new TypeToken<Collection<CachedSkin>>(){}.getType();
     public static final CachedSkin DEFAULT = new CachedSkin("Default", "", "");
     private static final String ASHCON_URL = "https://api.ashcon.app/mojang/v2/user/%s";
-    private static final String MOJANG_UUID_URL = "https://api.mojang.com/users/profiles/minecraft/%s";
-    private static final String MOJANG_SKIN_URL = "https://sessionserver.mojang.com/session/minecraft/profile/%s";
 
     private final Map<String, CompletableFuture<CachedSkin>> skinFutures = new ConcurrentHashMap<>();
 
@@ -76,14 +74,12 @@ public class SkinAPI {
         this.initiateCacheFromStorage();
 
         if (MINOR_VERSION >= 13) {
-            this.playerAdapter = new ModernAdapter(this);
+            this.playerAdapter = new ModernAdapter();
         } else if (SUPPORTS_CARBON) {
-            this.playerAdapter = new CarbonAdapter(this);
+            this.playerAdapter = new CarbonAdapter();
         } else {
-            this.playerAdapter = new LegacyAdapter(this);
+            this.playerAdapter = new LegacyAdapter();
         }
-
-        Bukkit.getPluginManager().registerEvents(new SkinListener(this), plugin);
     }
 
     public void unload() {
@@ -113,20 +109,11 @@ public class SkinAPI {
         return this.playerAdapter.getByPlayer(player);
     }
 
-    /**
-     * Register the skin for the player.
-     *
-     * @param player {@link Player} Player to register the skin for.
-     */
-    public void registerSkin(Player player) {
-        this.playerAdapter.registerSkin(player);
-    }
-
     public void fetchSkin(String name, Consumer<CachedSkin> callback) {
         // Register skin only when it's demanded
-        if (this.temporaryCache.containsKey(name)) {
-            CachedSkin skin = this.temporaryCache.get(name);
-            this.registerSkin(name, skin);
+        Player player = Bukkit.getPlayerExact(name);
+        if (player != null) {
+            CachedSkin skin = this.getByPlayer(player);
             callback.accept(skin);
             return;
         }
@@ -202,32 +189,6 @@ public class SkinAPI {
     public void registerSkin(String name, CachedSkin skin) {
         this.skinCache.put(name, skin);
         this.skinStorage.saveAsync(this.skinCache.values());
-    }
-
-    /**
-     * Register a player to the cache.
-     *
-     * @param player {@link Player} Player to register
-     */
-    public void registerPlayer(Player player) {
-        if (this.skinCache.containsKey(player.getName())) return;
-
-        CompletableFuture<CachedSkin> future = CompletableFuture.supplyAsync(() -> fetchSkin(player.getName()));
-        this.skinFutures.put(player.getName(), future);
-
-        future.whenComplete((skin, throwable) -> {
-            this.registerSkin(player.getName(), skin);
-            this.skinFutures.remove(player.getName());
-        });
-    }
-
-    /**
-     * Clear a player from the cache.
-     *
-     * @param player {@link Player} Player to clear
-     */
-    public void clearPlayer(Player player) {
-        this.temporaryCache.remove(player.getName());
     }
 
     /**

@@ -1,17 +1,15 @@
 package xyz.refinedev.api.skin.player.impl;
 
-import com.comphenix.protocol.wrappers.WrappedGameProfile;
-import com.comphenix.protocol.wrappers.WrappedSignedProperty;
-
-import lombok.RequiredArgsConstructor;
-
+import com.google.common.collect.Iterables;
+import com.mojang.authlib.GameProfile;
+import com.mojang.authlib.properties.Property;
+import me.drizzy.api.ItzelHandler;
+import me.drizzy.api.profile.GameProfileProvider;
 import org.bukkit.entity.Player;
 
-import xyz.refinedev.api.skin.CachedSkin;
+import xyz.refinedev.api.skin.data.CachedSkin;
 import xyz.refinedev.api.skin.SkinAPI;
 import xyz.refinedev.api.skin.player.IPlayerAdapter;
-
-import java.util.Iterator;
 
 /**
  * <p>
@@ -25,10 +23,7 @@ import java.util.Iterator;
  * @since 9/28/2024
  */
 
-@RequiredArgsConstructor
 public class LegacyAdapter implements IPlayerAdapter {
-
-    private final SkinAPI skinAPI;
 
     /**
      * Get the cached skin by the player.
@@ -37,22 +32,16 @@ public class LegacyAdapter implements IPlayerAdapter {
      * @return {@link CachedSkin} CachedSkin
      */
     public CachedSkin getByPlayer(Player player) {
-        WrappedGameProfile profile = WrappedGameProfile.fromPlayer(player);
-        Iterator<WrappedSignedProperty> iterator = profile.getProperties().get("textures").iterator();
-        if (!iterator.hasNext()) {
+        GameProfileProvider gameProfileProvider = ItzelHandler.getInstance().getGameProfileProvider();
+        GameProfile gameProfile = gameProfileProvider.getProfile(player);
+        if (gameProfile == null || gameProfile.getProperties().isEmpty()) {
             return SkinAPI.DEFAULT;
         }
-        WrappedSignedProperty prop = iterator.next();
-        return new CachedSkin(player.getName(), prop.getValue(), prop.getSignature());
-    }
 
-    /**
-     * Register the skin for the player.
-     *
-     * @param player {@link Player} Player to register the skin for.
-     */
-    public void registerSkin(Player player) {
-        CachedSkin skin = this.getByPlayer(player);
-        this.skinAPI.registerSkin(player.getName(), skin);
+        Property skin = Iterables.getFirst(gameProfile.getProperties().get("textures"), null);
+        if (skin != null) {
+            return new CachedSkin(player.getName(), skin.getValue(), skin.getSignature());
+        }
+        return SkinAPI.DEFAULT;
     }
 }

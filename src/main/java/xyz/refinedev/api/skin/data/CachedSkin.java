@@ -1,4 +1,4 @@
-package xyz.refinedev.api.skin;
+package xyz.refinedev.api.skin.data;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

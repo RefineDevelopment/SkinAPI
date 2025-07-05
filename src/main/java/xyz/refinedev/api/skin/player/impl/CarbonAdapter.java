@@ -3,12 +3,10 @@ package xyz.refinedev.api.skin.player.impl;
 import com.destroystokyo.paper.profile.PlayerProfile;
 import com.destroystokyo.paper.profile.ProfileProperty;
 
-import lombok.RequiredArgsConstructor;
-
 import org.bukkit.entity.Player;
 
-import xyz.refinedev.api.skin.CachedSkin;
 import xyz.refinedev.api.skin.SkinAPI;
+import xyz.refinedev.api.skin.data.CachedSkin;
 import xyz.refinedev.api.skin.player.IPlayerAdapter;
 
 /**
@@ -23,10 +21,7 @@ import xyz.refinedev.api.skin.player.IPlayerAdapter;
  * @since 9/28/2024
  */
 
-@RequiredArgsConstructor
 public class CarbonAdapter implements IPlayerAdapter {
-
-    private final SkinAPI skinAPI;
 
     /**
      * Get the cached skin by the player.
@@ -54,15 +49,4 @@ public class CarbonAdapter implements IPlayerAdapter {
 
         return new CachedSkin(profile.getName(), profileProperty.getValue(), profileProperty.getSignature());
     }
-
-    /**
-     * Register the skin for the player.
-     *
-     * @param player {@link Player} Player to register the skin for.
-     */
-    public void registerSkin(Player player) {
-        CachedSkin skin = this.getByPlayer(player);
-        this.skinAPI.registerSkin(player.getName(), skin);
-    }
-
 }
