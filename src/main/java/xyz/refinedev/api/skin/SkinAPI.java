@@ -106,7 +106,20 @@ public class SkinAPI {
      * @return {@link CachedSkin} CachedSkin
      */
     public CachedSkin getByPlayer(Player player) {
-        return this.playerAdapter.getByPlayer(player);
+        CachedSkin skin = this.getSkin(player.getName());
+        if (skin != null) {
+            return skin;
+        }
+
+        // If the skin is not cached, we will fetch it from the player adapter
+        skin = this.playerAdapter.getByPlayer(player);
+        if (skin == null) {
+            return DEFAULT;
+        }
+
+        // Register the skin to the cache
+        this.temporaryCache.put(player.getName(), skin);
+        return skin;
     }
 
     public void fetchSkin(String name, Consumer<CachedSkin> callback) {
@@ -199,6 +212,10 @@ public class SkinAPI {
      */
     public CachedSkin getSkin(String name) {
         return this.temporaryCache.getOrDefault(name, this.skinCache.getOrDefault(name, null));
+    }
+
+    public void clear(Player player) {
+        this.temporaryCache.remove(player.getName());
     }
 
     public static String VERSION;
