@@ -27,7 +27,7 @@ import xyz.refinedev.api.skin.player.IPlayerAdapter;
 @RequiredArgsConstructor
 public class LegacyAdapter implements IPlayerAdapter {
 
-    private final ItzelHandler itzelHandler;
+    private final GameProfileProvider gameProfileProvider;
 
     /**
      * Get the cached skin by the player.
@@ -36,7 +36,6 @@ public class LegacyAdapter implements IPlayerAdapter {
      * @return {@link CachedSkin} CachedSkin
      */
     public CachedSkin getByPlayer(Player player) {
-        GameProfileProvider gameProfileProvider = itzelHandler.getGameProfileProvider();
         GameProfile gameProfile = gameProfileProvider.getProfile(player);
         if (gameProfile == null || gameProfile.getProperties().isEmpty()) {
             return SkinAPI.DEFAULT;

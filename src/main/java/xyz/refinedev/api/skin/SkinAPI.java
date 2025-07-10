@@ -8,7 +8,8 @@ import com.google.gson.reflect.TypeToken;
 
 import lombok.Getter;
 
-import me.drizzy.api.ItzelHandler;
+import me.drizzy.api.profile.GameProfileProvider;
+
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -71,7 +72,7 @@ public class SkinAPI {
     private final IPlayerAdapter playerAdapter;
 
 
-    public SkinAPI(JavaPlugin plugin, ItzelHandler itzelHandler, Gson gson) {
+    public SkinAPI(JavaPlugin plugin, GameProfileProvider gameProfileProvider, Gson gson) {
         this.skinStorage = new JsonStorage<>("skins", plugin, gson);
         this.initiateCacheFromStorage();
 
@@ -80,7 +81,7 @@ public class SkinAPI {
         } else if (SUPPORTS_CARBON) {
             this.playerAdapter = new CarbonAdapter();
         } else {
-            this.playerAdapter = new LegacyAdapter(itzelHandler);
+            this.playerAdapter = new LegacyAdapter(gameProfileProvider);
         }
     }
 
