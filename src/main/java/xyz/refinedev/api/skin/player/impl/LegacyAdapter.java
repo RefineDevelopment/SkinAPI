@@ -3,6 +3,7 @@ package xyz.refinedev.api.skin.player.impl;
 import com.google.common.collect.Iterables;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
+import lombok.RequiredArgsConstructor;
 import me.drizzy.api.ItzelHandler;
 import me.drizzy.api.profile.GameProfileProvider;
 import org.bukkit.entity.Player;
@@ -23,7 +24,10 @@ import xyz.refinedev.api.skin.player.IPlayerAdapter;
  * @since 9/28/2024
  */
 
+@RequiredArgsConstructor
 public class LegacyAdapter implements IPlayerAdapter {
+
+    private final ItzelHandler itzelHandler;
 
     /**
      * Get the cached skin by the player.
@@ -32,7 +36,7 @@ public class LegacyAdapter implements IPlayerAdapter {
      * @return {@link CachedSkin} CachedSkin
      */
     public CachedSkin getByPlayer(Player player) {
-        GameProfileProvider gameProfileProvider = ItzelHandler.getInstance().getGameProfileProvider();
+        GameProfileProvider gameProfileProvider = itzelHandler.getGameProfileProvider();
         GameProfile gameProfile = gameProfileProvider.getProfile(player);
         if (gameProfile == null || gameProfile.getProperties().isEmpty()) {
             return SkinAPI.DEFAULT;
