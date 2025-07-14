@@ -160,7 +160,7 @@ public class SkinAPI {
             String signature = textureProperty.get().getSignature();
 
             CachedSkin skin = new CachedSkin(name, value, signature);
-            this.temporaryCache.put(name, skin);
+            callback.accept(skin);
         };
 
         // Avoid race conditions and fetching the same skin multiple times
