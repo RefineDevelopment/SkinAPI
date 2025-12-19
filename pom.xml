@@ -36,14 +36,14 @@
         </repository>
         <repository>
             <id>refine-releases</id>
-            <url>https://maven.refinedev.xyz/maven-releases</url>
+            <url>https://maven.refinedev.org/maven-releases</url>
         </repository>
     </repositories>
 
     <distributionManagement>
         <repository>
             <id>refine-public</id>
-            <url>https://maven.refinedev.xyz/public-repo</url>
+            <url>https://maven.refinedev.org/public-repo</url>
         </repository>
     </distributionManagement>
 

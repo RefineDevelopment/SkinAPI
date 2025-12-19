@@ -1,36 +1,23 @@
 package xyz.refinedev.api.skin;
 
 import com.google.common.collect.Iterables;
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.google.gson.reflect.TypeToken;
 
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
-import com.mojang.authlib.properties.PropertyMap;
+
 import lombok.Getter;
 
 import me.drizzy.api.profile.GameProfileProvider;
 
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.java.JavaPlugin;
 
 import xyz.refinedev.api.skin.data.CachedSkin;
 import xyz.refinedev.api.skin.player.IPlayerAdapter;
 import xyz.refinedev.api.skin.player.impl.CarbonAdapter;
 import xyz.refinedev.api.skin.player.impl.LegacyAdapter;
 import xyz.refinedev.api.skin.player.impl.ModernAdapter;
-import xyz.refinedev.api.storage.json.JsonStorage;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.lang.reflect.Type;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -50,21 +37,10 @@ import java.util.function.Consumer;
  */
 public class SkinAPI {
 
-//    private static final Type TYPE = new TypeToken<Collection<CachedSkin>>(){}.getType();
+    @Getter private static SkinAPI instance;
     public static final CachedSkin DEFAULT = new CachedSkin("Default", "", "");
-//    private static final String ASHCON_URL = "https://api.ashcon.app/mojang/v2/user/%s";
-//
+
     private final Map<String, CompletableFuture<GameProfile>> skinFutures = new ConcurrentHashMap<>();
-//
-//    /**
-//     * Custom JSON Storage for Skins
-//     */
-//    private final JsonStorage<Collection<CachedSkin>> skinStorage;
-//
-//    /**
-//     * This list stores our cached skins, so we don't fetch them all the time.
-//     */
-//    @Getter private final Map<String, CachedSkin> skinCache = new ConcurrentHashMap<>();
 
     /**
      * Temporary cache for skins that are fetched on login and then removed.
@@ -75,13 +51,14 @@ public class SkinAPI {
      * Player adapter for fetching skins
      */
     private final IPlayerAdapter playerAdapter;
-
+    /**
+     * Game profile provider for fetching profiles
+     */
     private final GameProfileProvider gameProfileProvider;
 
 
-    public SkinAPI(JavaPlugin plugin, GameProfileProvider gameProfileProvider, Gson gson) {
-//        this.skinStorage = new JsonStorage<>("skins", plugin, gson);
-//        this.initiateCacheFromStorage();
+    public SkinAPI(GameProfileProvider gameProfileProvider) {
+        instance = this;
 
         this.gameProfileProvider = gameProfileProvider;
 
@@ -93,23 +70,6 @@ public class SkinAPI {
             this.playerAdapter = new LegacyAdapter(gameProfileProvider);
         }
     }
-
-    public void unload() {
-//        this.skinStorage.save(this.skinCache.values());
-//        this.skinCache.clear();
-    }
-
-//    /**
-//     * Set up the storages from our cache
-//     */
-//    public void initiateCacheFromStorage() {
-//        Collection<CachedSkin> skinList = this.skinStorage.getData(TYPE);
-//        if (skinList == null || skinList.isEmpty()) return;
-//
-//        for ( CachedSkin skin : skinList ) {
-//            this.skinCache.put(skin.getName(), skin);
-//        }
-//    }
 
     /**
      * Get the cached skin by the player.
@@ -172,6 +132,7 @@ public class SkinAPI {
 
         CompletableFuture<GameProfile> skinFuture = CompletableFuture.supplyAsync(() -> this.gameProfileProvider.getProfile(name));
         skinFuture.whenComplete(skinCallback);
+        this.skinFutures.put(name, skinFuture);
     }
 
     public static Optional<Property> getTextureProperty(GameProfile profile) {
